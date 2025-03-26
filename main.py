@@ -1,46 +1,102 @@
+#!/usr/bin/env python3
+import os
+import readline
+import atexit
 from agent import Agent
 from tools import Calculator, WebsiteFetcher, SerpApiSearch
 
+# Set up readline with history file
+HISTFILE = os.path.expanduser("~/.agent_chat_history")
+HISTFILE_SIZE = 1000
 
-def main():
+# Make sure the history file exists
+if not os.path.exists(HISTFILE):
+    with open(HISTFILE, "w") as f:
+        pass
+
+# Load history if it exists
+try:
+    readline.read_history_file(HISTFILE)
+    readline.set_history_length(HISTFILE_SIZE)
+except FileNotFoundError:
+    pass
+
+# Save history on exit
+atexit.register(readline.write_history_file, HISTFILE)
+
+
+def initialize_agent():
+    """Initialize the agent with tools"""
+    print("Initializing agent...")
+
     # Create an agent with an objective
     agent = Agent(
-        objective="Help the user solve math problems, fetch website content, and search the web",
-        model="gpt-4o-mini",
+        objective="Help the user solve problems using available tools",
+        model="gpt-4o-mini",  # You can change this to use a different model
     )
 
     # Add tools to the agent
-    calculator_tool = Calculator()
-    website_fetcher_tool = WebsiteFetcher()
+    agent.add_tool(Calculator())
+    agent.add_tool(WebsiteFetcher())
 
-    # Add the new SerpAPI search tool - requires API key as env var or parameter
-    # Uncomment below to use with direct API key (not recommended for production)
-    # serp_api_tool = SerpApiSearch(api_key="your_api_key_here")
+    # Add the SerpAPI search tool if the API key is available
+    try:
+        agent.add_tool(SerpApiSearch())
+        print("✓ Search tool initialized")
+    except Exception as e:
+        print(f"✗ Search tool not available: {e}")
 
-    # Recommended: Use environment variable SERPAPI_API_KEY
-    serp_api_tool = SerpApiSearch()
+    return agent
 
-    agent.add_tool(calculator_tool)
-    agent.add_tool(website_fetcher_tool)
-    agent.add_tool(serp_api_tool)
 
-    # Run the agent
-    print("Starting agent with calculator, website fetcher, and Google search tools...")
-    initial_prompt = """
-    You have three tools available:
-    1. A calculator for math operations
-    2. A website fetcher to get content from URLs
-    3. A Google search tool to search the web
-    
-    Please show me how to use all three tools. First calculate 25 * 13 and then divide by 5.2.
-    Then fetch the content from https://example.com.
-    Finally, search for "Python programming best practices".
-    """
-    result = agent.run(initial_prompt)
+def display_response(response):
+    """Display the agent's response in a readable format"""
+    print("\n" + "=" * 80)
+    print(response.content)
+    print("=" * 80 + "\n")
 
-    # Print the final answer
-    print("\nFinal Answer:")
-    print(result[-1]["content"])
+
+def main():
+    """Run the chat interface"""
+    print("=" * 80)
+    print("📢 Agent Chat Interface")
+    print("=" * 80)
+    print("Type 'exit', 'quit', or press Ctrl+D to exit.")
+    print("Enter your message to interact with the agent.")
+    print("=" * 80)
+
+    agent = initialize_agent()
+
+    while True:
+        try:
+            # Get user input with readline (with history support)
+            user_input = input("\nYou: ")
+
+            # Check for exit command
+            if user_input.lower() in ["exit", "quit"]:
+                print("Goodbye!")
+                break
+
+            # Send the message to the agent
+            print("\nAgent is thinking...")
+            response = agent.send_message(user_input)
+
+            # Display the response
+            display_response(response)
+
+        except EOFError:
+            # Handle Ctrl+D
+            print("\nGoodbye!")
+            break
+        except KeyboardInterrupt:
+            # Handle Ctrl+C
+            print("\nOperation interrupted. Type 'exit' to quit.")
+            continue
+        except Exception as e:
+            import traceback
+
+            traceback.print_exc()
+            print(f"\nError: {str(e)}")
 
 
 if __name__ == "__main__":

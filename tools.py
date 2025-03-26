@@ -1,6 +1,7 @@
 from typing import Dict, Any, Callable, List, Optional
 import json
 import requests  # Added this import for HTTP requests
+import os  # For accessing environment variables
 
 
 class Tool:
@@ -120,3 +121,88 @@ class WebsiteFetcher(Tool):
 
         except requests.RequestException as e:
             return f"Error fetching website: {str(e)}"
+
+
+class SerpApiSearch(Tool):
+    """A tool to perform Google searches using SerpAPI"""
+
+    def __init__(self, api_key: Optional[str] = None):
+        """Initialize the SerpAPI search tool with an API key"""
+        self.api_key = api_key or os.environ.get("SERPAPI_API_KEY")
+        if not self.api_key:
+            raise ValueError(
+                "SerpAPI API key is required. Set SERPAPI_API_KEY environment variable or pass it as a parameter."
+            )
+
+        super().__init__(
+            name="google_search",
+            description="Search the web using Google Search API via SerpAPI",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "The search query to look up on Google",
+                    },
+                    "num_results": {
+                        "type": "integer",
+                        "description": "The number of search results to return (default: 5)",
+                    },
+                    "location": {
+                        "type": "string",
+                        "description": "Optional location to tailor search results to a specific area",
+                    },
+                },
+                "required": ["query"],
+            },
+        )
+
+    def execute(self, arguments: str) -> str:
+        """Execute a Google search using SerpAPI"""
+        args = json.loads(arguments)
+        query = args["query"]
+        num_results = args.get("num_results", 5)
+        location = args.get("location", "")
+
+        try:
+            # Prepare the SerpAPI parameters
+            params = {
+                "engine": "google",
+                "q": query,
+                "api_key": self.api_key,
+                "num": num_results,
+            }
+
+            # Add location if provided
+            if location:
+                params["location"] = location
+
+            # Make the request to SerpAPI
+            response = requests.get(
+                "https://serpapi.com/search", params=params, timeout=30
+            )
+            response.raise_for_status()
+
+            # Parse the results
+            data = response.json()
+
+            # Format and return search results
+            search_results = {
+                "query": query,
+                "total_results": data.get("search_information", {}).get(
+                    "total_results", "Unknown"
+                ),
+                "organic_results": data.get("organic_results", []),
+                "answer_box": data.get("answer_box", None),
+                "knowledge_graph": data.get("knowledge_graph", None),
+                "related_searches": data.get("related_searches", []),
+            }
+
+            return json.dumps(search_results, indent=2)
+
+        except requests.RequestException as e:
+            return f"Error performing Google search: {str(e)}"
+        except json.JSONDecodeError:
+            return f"Error parsing search results. Response was not valid JSON."
+        except Exception as e:
+            return f"Unexpected error performing search: {str(e)}"

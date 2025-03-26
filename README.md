@@ -1,5 +1,7 @@
 # Simple Agentic Framework
 
+![Screenshot of Agent CLI](screenshot.png)
+
 A lightweight Python framework for building agentic AI applications using the OpenAI API. This framework allows you to create AI agents that can use tools to accomplish objectives.
 
 ## Features
@@ -34,6 +36,24 @@ export OPENAI_API_KEY=your_api_key_here
 export SERPAPI_API_KEY=your_serpapi_key_here
 ```
 
+## Command Line Interface
+
+The framework includes a user-friendly command-line interface that allows you to interact with your agent directly:
+
+```bash
+python main.py
+```
+
+### CLI Features:
+
+- 🌈 **Rich Text Interface**: Beautiful, colorful console output with formatted responses
+- 🔄 **Tool Usage Tracking**: Displays which tools the agent used to fulfill your request
+- 📜 **Command History**: Remembers your previous commands for easy recall
+- 🛠️ **Automatic Tool Integration**: Tools are automatically loaded and available
+- ⌨️ **Interactive Commands**: Type 'exit' or 'quit' to end the session, or use Ctrl+D
+
+The CLI starts by initializing the agent with your available tools. If you have a SerpAPI key configured, the search functionality will be enabled automatically.
+
 ## Project Structure
 
 The framework consists of just 4 files:
@@ -41,7 +61,7 @@ The framework consists of just 4 files:
 - `agent.py`: Core Agent class that manages objectives and tool execution
 - `tools.py`: Base Tool class and example implementations
 - `conversation.py`: Manages interactions with the OpenAI API
-- `main.py`: Example usage
+- `main.py`: Example usage and CLI implementation
 
 ## Usage
 
@@ -146,6 +166,7 @@ follow_up = agent.send_message("Can you show me an example with factorial?")
 - Required packages:
   - openai>=1.10.0
   - requests>=2.31.0
+  - rich>=13.0.0
 
 ## License
 

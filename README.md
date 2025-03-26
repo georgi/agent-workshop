@@ -25,6 +25,15 @@ pip install -r requirements.txt
 export OPENAI_API_KEY=your_api_key_here
 ```
 
+4. If you plan to use search functionality, you'll need a SerpAPI key:
+   - Sign up for a free account at [SerpAPI](https://serpapi.com/)
+   - Copy your API key from the dashboard
+   - Set it as an environment variable:
+
+```bash
+export SERPAPI_API_KEY=your_serpapi_key_here
+```
+
 ## Project Structure
 
 The framework consists of just 4 files:
@@ -96,6 +105,7 @@ The framework comes with several built-in tools:
 
 1. **Calculator** - Performs basic arithmetic operations (add, subtract, multiply, divide)
 2. **WebsiteFetcher** - Fetches content from a specified URL and returns a summary with content preview
+3. **WebSearch** - Search the web using SerpAPI (requires SERPAPI_API_KEY environment variable to be set)
 
 ### Customizing the Agent
 

@@ -16,7 +16,7 @@ A lightweight Python framework for building agentic AI applications using the Op
 2. Install the required dependencies:
 
 ```bash
-pip install openai
+pip install -r requirements.txt
 ```
 
 3. Set your OpenAI API key as an environment variable:
@@ -40,17 +40,19 @@ The framework consists of just 4 files:
 
 ```python
 from agent import Agent
-from tools import Calculator
+from tools import Calculator, WebsiteFetcher
 
 # Create an agent with an objective
-agent = Agent(objective="Help the user solve math problems")
+agent = Agent(objective="Help the user solve math problems and fetch web content")
 
 # Add tools to the agent
 calculator_tool = Calculator()
+website_fetcher_tool = WebsiteFetcher()
 agent.add_tool(calculator_tool)
+agent.add_tool(website_fetcher_tool)
 
 # Run the agent with a user query
-result = agent.run("I need to calculate 25 * 13 and then divide by 5.2")
+result = agent.run("Calculate 25 * 13 and then fetch the content from https://example.com")
 
 # Print the final response
 print(result[-1]["content"])
@@ -88,6 +90,13 @@ class WeatherTool(Tool):
         return f"It's 72°F and sunny in {location}"
 ```
 
+### Available Tools
+
+The framework comes with several built-in tools:
+
+1. **Calculator** - Performs basic arithmetic operations (add, subtract, multiply, divide)
+2. **WebsiteFetcher** - Fetches content from a specified URL and returns a summary with content preview
+
 ### Customizing the Agent
 
 You can customize the agent with different models and system messages:
@@ -124,7 +133,9 @@ follow_up = agent.send_message("Can you show me an example with factorial?")
 ## Requirements
 
 - Python 3.7+
-- OpenAI Python library
+- Required packages:
+  - openai>=1.10.0
+  - requests>=2.31.0
 
 ## License
 

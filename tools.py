@@ -1,5 +1,6 @@
 from typing import Dict, Any, Callable, List, Optional
 import json
+import requests  # Added this import for HTTP requests
 
 
 class Tool:
@@ -69,3 +70,53 @@ class Calculator(Tool):
             return str(a / b)
         else:
             return f"Error: Unknown operation {operation}"
+
+
+class WebsiteFetcher(Tool):
+    """A tool to fetch the content of a website"""
+
+    def __init__(self):
+        super().__init__(
+            name="fetch_website",
+            description="Fetch the content of a website given a URL",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "description": "The URL of the website to fetch content from",
+                    },
+                },
+                "required": ["url"],
+            },
+        )
+
+    def execute(self, arguments: str) -> str:
+        """Fetch content from the specified URL"""
+        args = json.loads(arguments)
+        url = args["url"]
+
+        try:
+            response = requests.get(url, timeout=10)
+            response.raise_for_status()  # Raise an exception for HTTP errors
+
+            # Return a summary and truncate if it's too large
+            content_length = len(response.text)
+            content_preview = response.text[:2000]  # Get first 2000 chars
+
+            result = {
+                "status_code": response.status_code,
+                "content_length": content_length,
+                "content_type": response.headers.get("Content-Type", "unknown"),
+                "content_preview": content_preview,
+            }
+
+            if content_length > 2000:
+                result["note"] = (
+                    f"Content truncated (showing {2000}/{content_length} characters)"
+                )
+
+            return json.dumps(result, indent=2)
+
+        except requests.RequestException as e:
+            return f"Error fetching website: {str(e)}"
